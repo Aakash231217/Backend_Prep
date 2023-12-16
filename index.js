@@ -48,15 +48,18 @@ app.get("/", isAuthenticated, (req, res) => {
   res.render("logout",{name:req.user.name});
 });
 
-app.get("/add", (req, res) => {
-  User.create({ name: "Aakash", email: "rktaakash@gmail.com" }).then(() => {
-    res.send("Nice");
-  });
+app.get("/register", (req,res)=>{
+  res.render("register");
 });
 
 app.post("/login", async (req, res) => {
   const { name, email } = req.body;
-  const user = await User.create({
+ 
+  let user= await User.findOne({email});
+  if(!user){
+    return res.redirect("/register");
+  }
+  user = await User.create({
     name,
     email,
   });
