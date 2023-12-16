@@ -3,6 +3,8 @@ import path from 'path';
 import mongoose from 'mongoose';
 import cookieParser from "cookie-parser";
 import jwt from 'jsonwebtoken';
+import bcrypt from "bcrypt";
+
 
 mongoose.connect("mongodb://localhost:27017/Backend", {
   useNewUrlParser: true,
@@ -48,8 +50,25 @@ app.get("/", isAuthenticated, (req, res) => {
   res.render("logout",{name:req.user.name});
 });
 
-app.get("/register", (req,res)=>{
-  res.render("register");
+app.get("/register", async(req,res)=>{
+  const { name, email, password } = req.body;
+  let user= await User.findOne({email});
+  if(!user){
+    return res.redirect("/login");
+  }
+  const hashedPassword= await bcrypt.hash(password,10);
+  user = await User.create({
+    name,
+    email,
+    password: hashedPassword,
+  });
+  const token = jwt.sign({ _id: user._id }, "asadwedswerdserd");
+  console.log(token);
+  res.cookie("token", token, {
+    httpOnly: true,
+    expires: new Date(Date.now() + 60 * 1000), // Adjust the expiration time as needed
+  });
+  res.redirect("/");
 });
 
 app.post("/login", async (req, res) => {
