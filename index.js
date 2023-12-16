@@ -72,16 +72,17 @@ app.get("/register", async(req,res)=>{
 });
 
 app.post("/login", async (req, res) => {
-  const { name, email } = req.body;
+  const { name, email,password } = req.body;
  
   let user= await User.findOne({email});
   if(!user){
     return res.redirect("/register");
   }
-  user = await User.create({
-    name,
-    email,
-  });
+  const isMatch= await bcrypt.compare(password,user.password);
+  
+  if(!isMatch){
+    return res.render("login",{email,message: "Incorrect Password"});
+  }
   const token = jwt.sign({ _id: user._id }, "asadwedswerdserd");
   console.log(token);
   res.cookie("token", token, {
